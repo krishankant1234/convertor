@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi Calculator</title>
+    <!-- <link rel="stylesheet" href="style.css"> -->
+    <style>
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 20px;
+          background-color: #ecf0f1;
+          color: #2c3e50;
+        }
+        h1 {
+          text-align: center;
+          color: #34495e;
+          margin-bottom: 20px;
+        }
+        .calculator {
+          background-color: #fff;
+          border-radius: 12px;
+          box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+          padding: 20px;
+          margin-bottom: 30px;
+          display: none; /* Initially hide all calculators */
+          transition: transform 0.4s, opacity 0.4s;
+          transform: translateY(20px);
+          opacity: 0;
+        }
+        .calculator.active {
+          display: block;
+          transform: translateY(0);
+          opacity: 1;
+        }
+        h2 {
+          color: #2980b9;
+          border-bottom: 2px solid #2980b9;
+          padding-bottom: 10px;
+          margin-bottom: 20px;
+        }
+        input, select, button {
+          width: 100%;
+          padding: 12px;
+          margin: 10px 0;
+          border: 1px solid #bdc3c7;
+          border-radius: 6px;
+          box-sizing: border-box;
+          font-size: 16px;
+        }
+        button {
+          background-color: #49b9df;
+          color: white;
+          border: none;
+          cursor: pointer;
+          transition: background-color 0.3s, transform 0.2s;
+        }
+        button:hover {
+          background-color: #047db9;
+          transform: scale(1.05);
+        }
+        .nav-button {
+          width: auto;
+          margin: 5px;
+          display: inline-block;
+          background-color: #3498db;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          padding: 10px 20px;
+          cursor: pointer;
+          transition: background-color 0.3s, transform 0.2s;
+        }
+        .nav-button:hover {
+          background-color: #2980b9;
+          transform: scale(1.05);
+        }
+        p {
+          font-weight: bold;
+          margin-top: 15px;
+        }
+        #result, #bmi, #bmiCategory, #currencyResult {
+          color: #e74c3c;
+        }
+        .history {
+          background-color: #f5f5f5;
+          border-radius: 8px;
+          padding: 10px;
+          margin-top: 20px;
+          box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .history ul {
+          list-style-type: none;
+          padding: 0;
+        }
+        .history li {
+          margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Multi Calculator</h1>
+
+    <div class="nav-buttons">
+        <button class="nav-button" onclick="showCalculator('basicCalculator')">Basic Calculator</button>
+        <button class="nav-button" onclick="showCalculator('bmiCalculator')">BMI Calculator</button>
+        <button class="nav-button" onclick="showCalculator('currencyCalculator')">Currency Calculator</button>
+    </div>
+
+    <div id="basicCalculator" class="calculator">
+        <h2>Basic Calculator</h2>
+        <input type="number" id="num1" placeholder="Number 1">
+        <select id="operator">
+            <option value="+">+</option>
+            <option value="-">-</option>
+            <option value="*">*</option>
+            <option value="/">/</option>
+        </select>
+        <input type="number" id="num2" placeholder="Number 2">
+        <button onclick="calculate()">Calculate</button>
+        <button onclick="clearBasicCalculator()">Clear</button>
+        <p>Result: <span id="result"></span></p>
+        <button onclick="toggleHistory('basicHistory')">Show History</button>
+        <div id="basicHistory" class="history" style="display: none;">
+            <h3>Calculation History</h3>
+            <ul id="basicHistoryList"></ul>
+        </div>
+    </div>
+
+    <div id="bmiCalculator" class="calculator">
+        <h2>BMI Calculator</h2>
+        <input type="number" id="weight" placeholder="Weight (kg)">
+        <input type="number" id="height" placeholder="Height (cm)">
+        <button onclick="calculateBMI()">Calculate BMI</button>
+        <button onclick="clearBMICalculator()">Clear</button>
+        <p>BMI: <span id="bmi"></span></p>
+        <p>Category: <span id="bmiCategory"></span></p>
+        <button onclick="toggleHistory('bmiHistory')">Show History</button>
+        <div id="bmiHistory" class="history" style="display: none;">
+            <h3>BMI Calculation History</h3>
+            <ul id="bmiHistoryList"></ul>
+        </div>
+    </div>
+
+    <div id="currencyCalculator" class="calculator">
+        <h2>Currency Calculator</h2>
+        <input type="number" id="amount" placeholder="Amount">
+        <select id="fromCurrency">
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="JPY">JPY</option>
+            <option value="INR">INR</option>
+        </select>
+        <select id="toCurrency">
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="INR">INR</option>
+            <option value="GBP">GBP</option>
+            <option value="JPY">JPY</option>
+        </select>
+        <button onclick="convertCurrency()">Convert</button>
+        <button onclick="clearCurrencyCalculator()">Clear</button>
+        <p>Result: <span id="currencyResult"></span></p>
+    </div>
+
+    <script >
+        let basicHistoryVisible = false;
+        let bmiHistoryVisible = false;
+
+        function showCalculator(calculatorId) {
+            document.querySelectorAll('.calculator').forEach(calculator => {
+                calculator.classList.remove('active');
+            });
+            document.getElementById(calculatorId).classList.add('active');
+        }
+
+        function calculate() {
+            const num1 = parseFloat(document.getElementById('num1').value);
+            const num2 = parseFloat(document.getElementById('num2').value);
+            const operator = document.getElementById('operator').value;
+            let result;
+
+            switch (operator) {
+                case '+':
+                    result = num1 + num2;
+                    break;
+                case '-':
+                    result = num1 - num2;
+                    break;
+                case '*':
+                    result = num1 * num2;
+                    break;
+                case '/':
+                    result = num1 / num2;
+                    break;
+            }
+
+            document.getElementById('result').textContent = result;
+            addToHistory(num1, operator, num2, result, 'basicHistoryList');
+        }
+
+        function addToHistory(num1, operator, num2, result, historyListId) {
+            const historyList = document.getElementById(historyListId);
+            const historyItem = document.createElement('li');
+            historyItem.textContent = `${num1} ${operator} ${num2} = ${result}`;
+            historyList.appendChild(historyItem);
+        }
+
+        function toggleHistory(historyId) {
+            const history = document.getElementById(historyId);
+            history.style.display = history.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function clearBasicCalculator() {
+            document.getElementById('num1').value = '';
+            document.getElementById('num2').value = '';
+            document.getElementById('result').textContent = '';
+        }
+
+        function calculateBMI() {
+            const weight = parseFloat(document.getElementById('weight').value);
+            const height = parseFloat(document.getElementById('height').value) / 100;
+            const bmi = weight / (height * height);
+            const bmiRounded = bmi.toFixed(1);
+
+            document.getElementById('bmi').textContent = bmiRounded;
+
+            let category;
+            if (bmi < 18.5) {
+                category = 'Underweight';
+            } else if (bmi < 25) {
+                category = 'Normal weight';
+            } else if (bmi < 30) {
+                category = 'Overweight';
+            } else {
+                category = 'Obese';
+            }
+
+            document.getElementById('bmiCategory').textContent = category;
+            addToHistory(weight, 'kg,', height * 100 + 'cm', bmiRounded + ' (' + category + ')', 'bmiHistoryList');
+        }
+
+        function clearBMICalculator() {
+            document.getElementById('weight').value = '';
+            document.getElementById('height').value = '';
+            document.getElementById('bmi').textContent = '';
+            document.getElementById('bmiCategory').textContent = '';
+        }
+
+        function convertCurrency() {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const fromCurrency = document.getElementById('fromCurrency').value;
+            const toCurrency = document.getElementById('toCurrency').value;
+
+            const rates = {
+                USD: 1,
+                EUR: 0.92,
+                GBP: 0.79,
+                JPY: 151.72,
+                INR: 83.36
+            };
+
+            const result = (amount / rates[fromCurrency]) * rates[toCurrency];
+            document.getElementById('currencyResult').textContent = `${result.toFixed(2)} ${toCurrency}`;
+        }
+
+        function clearCurrencyCalculator() {
+            document.getElementById('amount').value = '';
+            document.getElementById('currencyResult').textContent = '';
+        }
+    </script>
+</body>
+</html>
